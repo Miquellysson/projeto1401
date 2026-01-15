@@ -971,7 +971,7 @@ if ($route === 'home') {
     echo '  </form>';
     echo '</section>';
   } else {
-    $heroClasses = 'text-white py-12 md:py-16 mb-10';
+    $heroClasses = 'text-white py-12 md:py-16 mb-10 home-hero';
     $heroStyleAttr = '';
     if ($heroBackgroundType === 'gradient') {
       $heroStyleAttr = ' style="background: linear-gradient(135deg, '.htmlspecialchars($heroGradientFrom, ENT_QUOTES, 'UTF-8').', '.htmlspecialchars($heroGradientTo, ENT_QUOTES, 'UTF-8').');"';
@@ -986,15 +986,15 @@ if ($route === 'home') {
     echo '    <div class="grid lg:grid-cols-[1.1fr,0.9fr] gap-10 items-center">';
     echo '      <div class="text-left space-y-6">';
     echo '        <div>';
-    echo '          <h2 class="text-3xl md:text-5xl font-bold mb-3 leading-tight">'.$heroTitleHtml.'</h2>';
-    echo '          <p class="text-white/90 text-lg md:text-xl">'.$heroSubtitleHtml.'</p>';
+    echo '          <h2 class="text-3xl md:text-5xl font-bold mb-3 leading-tight hero-title">'.$heroTitleHtml.'</h2>';
+    echo '          <p class="text-white/90 text-lg md:text-xl hero-subtitle">'.$heroSubtitleHtml.'</p>';
     echo '        </div>';
-    echo '        <form method="get" class="flex flex-col sm:flex-row gap-3 bg-white/10 p-2 rounded-2xl backdrop-blur">';
+    echo '        <form method="get" class="flex flex-col sm:flex-row gap-3 bg-white/10 p-2 rounded-2xl backdrop-blur hero-search">';
     echo '          <input type="hidden" name="route" value="home">';
-    echo '          <input class="flex-1 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:ring-4 focus:ring-brand-200" name="q" value="'.htmlspecialchars($q).'" placeholder="'.$heroSearchPlaceholderHtml.'">';
+    echo '          <input class="flex-1 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:ring-4 focus:ring-brand-200 hero-input" name="q" value="'.htmlspecialchars($q).'" placeholder="'.$heroSearchPlaceholderHtml.'">';
     echo '          <button class="px-5 py-3 rounded-xl bg-white text-brand-700 font-semibold hover:bg-brand-50 cta-button transition"><i class="fa-solid fa-search mr-2"></i>'.$heroSearchButtonHtml.'</button>';
     echo '        </form>';
-    echo '        <div class="flex flex-wrap items-center gap-4 text-white/80 text-sm">';
+    echo '        <div class="flex flex-wrap items-center gap-4 text-white/80 text-sm hero-support">';
     echo '          <span class="flex items-center gap-2"><i class="fa-solid fa-clock text-white"></i> '.$heroSupportLeftHtml.'</span>';
     echo '          <span class="flex items-center gap-2"><i class="fa-solid fa-medal text-white"></i> '.$heroSupportRightHtml.'</span>';
     echo '        </div>';
@@ -1004,7 +1004,7 @@ if ($route === 'home') {
       $title = htmlspecialchars($feature['title'], ENT_QUOTES, 'UTF-8');
       $desc  = htmlspecialchars($feature['desc'], ENT_QUOTES, 'UTF-8');
       $icon  = htmlspecialchars($feature['icon'], ENT_QUOTES, 'UTF-8');
-      echo '        <div class="rounded-2xl border border-white/15 bg-white/10 p-5 shadow-lg backdrop-blur flex flex-col gap-2">';
+      echo '        <div class="rounded-2xl border border-white/15 bg-white/10 p-5 shadow-lg backdrop-blur flex flex-col gap-2 hero-feature">';
       echo '          <span class="w-10 h-10 rounded-full bg-white/20 text-white grid place-items-center text-lg"><i class="fa-solid '.$icon.'"></i></span>';
       echo '          <div class="font-semibold">'.$title.'</div>';
       echo '          <p class="text-sm text-white/80 leading-relaxed">'.$desc.'</p>';
