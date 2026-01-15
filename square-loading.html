@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Preparando checkout</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: radial-gradient(circle at top, #123b8b 0%, #0f2f6c 45%, #091e43 100%);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+        color: #fff;
+        text-align: center;
+      }
+      .box {
+        max-width: 340px;
+        padding: 32px 28px 40px;
+        background: rgba(15, 63, 145, 0.82);
+        border-radius: 20px;
+        box-shadow: 0 18px 45px -28px rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(10px);
+      }
+      h1 {
+        font-size: 20px;
+        margin: 0;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+      }
+      p {
+        font-size: 14px;
+        line-height: 1.5;
+        margin: 14px 0 0;
+        color: rgba(255,255,255,0.85);
+      }
+      .spinner {
+        margin: 28px auto 0;
+        width: 46px;
+        height: 46px;
+        border: 4px solid rgba(255,255,255,0.25);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      button {
+        margin-top: 26px;
+        padding: 10px 18px;
+        border-radius: 999px;
+        border: none;
+        background: #fff;
+        color: #0f3d91;
+        font-weight: 600;
+        cursor: pointer;
+        letter-spacing: 0.01em;
+        box-shadow: 0 12px 25px -20px rgba(0, 0, 0, 0.6);
+      }
+      button:focus-visible {
+        outline: 3px solid rgba(255, 255, 255, 0.45);
+        outline-offset: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="box">
+      <h1>Preparando checkout seguro</h1>
+      <p>Não feche esta janela. Abriremos a tela de pagamento em instantes.</p>
+      <div class="spinner" role="status" aria-label="Carregando"></div>
+      <p style="font-size:13px;margin-top:18px;">Se nada acontecer em alguns segundos, use o botão abaixo.</p>
+      <button id="manualLaunch" type="button" style="display:none;">Abrir checkout agora</button>
+    </div>
+    <script>
+      (function () {
+        const STORAGE_KEY = 'square_checkout_target';
+        const CHECK_INTERVAL = 1200;
+        const MAX_WAIT = 300000; // 5 minutos
+        const manualBtn = document.getElementById('manualLaunch');
+        let consumed = false;
+        let lastUrl = null;
+        const params = new URLSearchParams(window.location.search);
+        const targetParam = params.get('target');
+
+        function parsePayload(value) {
+          if (!value) return null;
+          try {
+            const data = JSON.parse(value);
+            if (data && typeof data.url === 'string' && data.url.trim() !== '') {
+              return data.url;
+            }
+          } catch (err) {
+            if (typeof value === 'string' && value.startsWith('http')) {
+              return value;
+            }
+          }
+          return null;
+        }
+
+        function consume(url) {
+          if (!url || consumed) return;
+          consumed = true;
+          try {
+            localStorage.removeItem(STORAGE_KEY);
+          } catch (err) {}
+          window.location.replace(url);
+        }
+
+        function checkExisting(showButton) {
+          let value = null;
+          try {
+            value = localStorage.getItem(STORAGE_KEY);
+          } catch (err) {
+            value = null;
+          }
+          const url = parsePayload(value);
+          if (url) {
+            lastUrl = url;
+            if (manualBtn) manualBtn.style.display = 'inline-block';
+            consume(url);
+          } else if (showButton && manualBtn) {
+            manualBtn.style.display = 'inline-block';
+          }
+        }
+
+        window.addEventListener('storage', function (evt) {
+          if (evt.key === STORAGE_KEY && evt.newValue) {
+            const url = parsePayload(evt.newValue);
+            if (url) {
+              lastUrl = url;
+              if (manualBtn) manualBtn.style.display = 'inline-block';
+              consume(url);
+            }
+          }
+        });
+
+        window.addEventListener('message', function (evt) {
+          if (!evt || !evt.data) return;
+          if (evt.data.type === 'square_checkout_url') {
+            const payload = typeof evt.data.payload === 'string' ? evt.data.payload : '';
+            const url = parsePayload(payload);
+            if (url) {
+              lastUrl = url;
+              if (manualBtn) manualBtn.style.display = 'inline-block';
+              consume(url);
+            }
+          }
+        });
+
+        if (manualBtn) {
+          manualBtn.addEventListener('click', function () {
+            if (lastUrl) {
+              consume(lastUrl);
+            } else {
+              checkExisting(true);
+            }
+          });
+        }
+
+        checkExisting(false);
+        const poll = setInterval(function () {
+          if (consumed) {
+            clearInterval(poll);
+            return;
+          }
+          checkExisting(false);
+        }, CHECK_INTERVAL);
+
+        setTimeout(function () {
+          if (!consumed) {
+            checkExisting(true);
+          }
+        }, 4000);
+
+        setTimeout(function () {
+          if (!consumed && manualBtn) {
+            manualBtn.style.display = 'inline-block';
+          }
+        }, 8000);
+
+        setTimeout(function () {
+          if (!consumed) {
+            try { localStorage.removeItem(STORAGE_KEY); } catch (err) {}
+            if (manualBtn) manualBtn.textContent = 'Atualizar tentativa';
+            if (manualBtn) manualBtn.style.display = 'inline-block';
+          }
+        }, MAX_WAIT);
+
+        if (targetParam) {
+          lastUrl = targetParam;
+          if (manualBtn) manualBtn.style.display = 'inline-block';
+          try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify({ url: targetParam, ts: Date.now() }));
+          } catch (err) {}
+          setTimeout(function () {
+            consume(targetParam);
+          }, 400);
+        }
+      })();
+    </script>
+  </body>
+</html>

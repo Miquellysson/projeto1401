@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Teste do Image Proxy</title>
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial,sans-serif;padding:20px;line-height:1.45;background:#f6f7fb;color:#222}
+    .row{display:flex;flex-wrap:wrap;gap:16px;margin:12px 0}
+    .card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:16px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+    input[type=text]{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:10px}
+    button{padding:10px 14px;border-radius:10px;border:1px solid #cbd5e1;background:#111827;color:#fff;cursor:pointer}
+    button.secondary{background:#fff;color:#111;border-color:#cbd5e1}
+    .muted{color:#6b7280;font-size:12px}
+    .ok{color:#16a34a;font-weight:600}
+    .err{color:#dc2626;font-weight:600}
+    img{max-width:380px;max-height:220px;border-radius:10px;border:1px solid #e5e7eb;background:#fafafa}
+    code{background:#f1f5f9;padding:2px 6px;border-radius:6px}
+  </style>
+</head>
+<body>
+  <h1>Teste do Image Proxy</h1>
+  <p>Use esta página no domínio <code>victorfarmafacil.com</code> para validar o <b>img-proxy.php</b>.</p>
+
+  <div class="card">
+    <label for="orig">URL da imagem (origem WordPress)</label>
+    <input id="orig" type="text" value="https://base.rhemacriativa.com/wp-content/uploads/2025/08/AZITROMICINA.png">
+    <div class="row">
+      <button id="btn1" class="secondary">1) Testar acesso direto (deve falhar)</button>
+      <button id="btn2">2) Testar via proxy (deve funcionar)</button>
+      <button id="btn3" class="secondary">3) Testar via proxy (forçar recarregar)</button>
+    </div>
+    <div class="muted">Proxy gerado: <code id="proxy-url"></code></div>
+  </div>
+
+  <div class="row">
+    <div class="card">
+      <h3>Direto</h3>
+      <div id="status-direct" class="muted">Aguardando…</div>
+      <img id="img-direct" alt="direto (cross-domain)">
+    </div>
+    <div class="card">
+      <h3>Proxy</h3>
+      <div id="status-proxy" class="muted">Aguardando…</div>
+      <img id="img-proxy" alt="via proxy">
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>HEAD no proxy (mesma origem)</h3>
+    <p class="muted">Aqui validamos status HTTP e alguns cabeçalhos do <code>img-proxy.php</code>.</p>
+    <div id="head-out" class="muted">—</div>
+  </div>
+
+<script>
+function proxyFrom(url){
+  try{ return '/img-proxy.php?u=' + encodeURIComponent(url); }
+  catch(e){ return ''; }
+}
+
+function setProxyUrl() {
+  const url = document.getElementById('orig').value.trim();
+  document.getElementById('proxy-url').textContent = proxyFrom(url);
+}
+setProxyUrl();
+document.getElementById('orig').addEventListener('input', setProxyUrl);
+
+function testDirect(){
+  const url = document.getElementById('orig').value.trim();
+  const img = document.getElementById('img-direct');
+  const st = document.getElementById('status-direct');
+  st.textContent = 'Carregando…';
+  img.onload = () => st.innerHTML = '<span class="ok">OK</span> (carregou direto)';
+  img.onerror = () => st.innerHTML = '<span class="err">ERRO</span> (bloqueado na origem)';
+  img.src = url + (url.includes('?') ? '&' : '?') + 't=' + Date.now();
+}
+
+async function testProxy(bust=false){
+  const url = document.getElementById('orig').value.trim();
+  const proxy = proxyFrom(url) + (bust ? '&bust=' + Date.now() : '');
+  const img = document.getElementById('img-proxy');
+  const st = document.getElementById('status-proxy');
+  st.textContent = 'Carregando via proxy…';
+  img.onload = () => st.innerHTML = '<span class="ok">OK</span> (carregou via proxy)';
+  img.onerror = () => st.innerHTML = '<span class="err">ERRO</span> (proxy falhou)';
+  img.src = proxy;
+
+  // HEAD/GET no proxy para ver status e headers
+  try{
+    const r = await fetch(proxy, { method: 'GET', cache: 'no-cache' });
+    const out = [
+      'HTTP: ' + r.status,
+      'Content-Type: ' + (r.headers.get('content-type') || '-'),
+      'ETag: ' + (r.headers.get('etag') || '-'),
+      'Last-Modified: ' + (r.headers.get('last-modified') || '-'),
+      'Cache-Control: ' + (r.headers.get('cache-control') || '-')
+    ].join('<br>');
+    document.getElementById('head-out').innerHTML = out;
+  }catch(e){
+    document.getElementById('head-out').innerHTML = '<span class="err">Falha ao fazer fetch no proxy</span>';
+  }
+}
+
+document.getElementById('btn1').addEventListener('click', testDirect);
+document.getElementById('btn2').addEventListener('click', () => testProxy(false));
+document.getElementById('btn3').addEventListener('click', () => testProxy(true));
+</script>
+</body>
+</html>

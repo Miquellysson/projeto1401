@@ -1,0 +1,72 @@
+:root {
+  --brand: #2060c8;
+  --bg-light: #ffffff;
+  --bg-dark: #0b1220;
+  --fg-light: #111827;
+  --fg-dark: #e5e7eb;
+}
+
+html[data-theme='light'] {
+  --bg: var(--bg-light);
+  --fg: var(--fg-light);
+}
+
+html[data-theme='dark'] {
+  --bg: var(--bg-dark);
+  --fg: var(--fg-dark);
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: system-ui, sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+@media (max-width: 640px) {
+  .mobile-grid-products {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .product-card .p-4 {
+    padding: 14px;
+  }
+  header.blur-bg {
+    backdrop-filter: blur(18px);
+    border-bottom: none;
+  }
+  .hero-section {
+    padding: 32px 18px;
+    text-align: left;
+  }
+  .hero-section form {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .hero-section form input {
+    width: 100%;
+  }
+  .hero-section .cta-button {
+    width: 100%;
+    justify-content: center;
+  }
+  .whatsapp-button {
+    right: 16px;
+    bottom: 16px;
+  }
+}
+
+.product-ribbon{
+  position:absolute;
+  bottom:12px;
+  left:12px;
+  background:linear-gradient(135deg,#0ea5e9,#6366f1);
+  color:#fff;
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  padding:6px 10px;
+  border-radius:999px;
+  box-shadow:0 10px 25px rgba(14,165,233,.35);
+}

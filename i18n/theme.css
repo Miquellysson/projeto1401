@@ -1,0 +1,92 @@
+/* theme.css — tokens light/dark sem quebrar Tailwind */
+/* Aplica via .theme-light ou .theme-dark na <html> ou <body> */
+
+:root,
+.theme-light {
+  --bg: #f8fafc;
+  --panel: #ffffff;
+  --text: #0f172a;
+  --muted: #64748b;
+  --brand: #2563eb;
+  --brand-600: #2563eb;
+  --brand-700: #1d4ed8;
+  --success: #16a34a;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --border: #e5e7eb;
+  --card-shadow: 0 10px 25px -10px rgba(0,0,0,.12);
+}
+
+.theme-dark {
+  --bg: #0b1220;
+  --panel: #0f172a;
+  --text: #e2e8f0;
+  --muted: #94a3b8;
+  --brand: #60a5fa;
+  --brand-600: #3b82f6;
+  --brand-700: #2563eb;
+  --success: #22c55e;
+  --warning: #fbbf24;
+  --danger: #f87171;
+  --border: #1f2937;
+  --card-shadow: 0 12px 30px -12px rgba(0,0,0,.55);
+}
+
+/* Utilitários que não conflitam com o seu CSS existente */
+body.themable {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  box-shadow: var(--card-shadow);
+}
+
+.stat-card {
+  padding: 1.25rem;
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  box-shadow: var(--card-shadow);
+}
+
+.badge {
+  display:inline-flex;
+  align-items:center;
+  gap:.35rem;
+  padding:.25rem .6rem;
+  border-radius:999px;
+  font-size:.75rem;
+  border:1px solid var(--border);
+  background: color-mix(in oklab, var(--panel) 85%, var(--brand) 15%);
+}
+
+.btn-ghost {
+  border:1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  border-radius:.75rem;
+  padding:.5rem .9rem;
+}
+.btn-ghost:hover { background: color-mix(in oklab, var(--panel) 85%, var(--brand) 15%); }
+
+.btn-brand {
+  background: var(--brand-600);
+  color: #fff;
+  border-radius:.75rem;
+  padding:.6rem 1rem;
+}
+.btn-brand:hover { background: var(--brand-700); }
+
+.table-soft thead th {
+  background: color-mix(in oklab, var(--panel) 85%, var(--brand) 15%);
+}
+.table-soft tbody tr:hover {
+  background: color-mix(in oklab, var(--panel) 92%, var(--brand) 8%);
+}

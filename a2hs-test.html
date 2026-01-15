@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <title>Teste PWA / A2HS - Get Power Research</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#0EA5E9">
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Helvetica,Arial,sans-serif;margin:0;background:#0b1220;color:#e6e9f2}
+    header{padding:16px;border-bottom:1px solid #1f2840;background:#0f172a}
+    main{padding:16px;max-width:860px;margin:0 auto}
+    .card{background:#111936;border:1px solid #1f2840;border-radius:12px;padding:16px;margin:12px 0}
+    h1{font-size:20px;margin:0}
+    h2{font-size:16px;margin:0 0 8px}
+    code,pre{background:#0f1529;color:#a0b8ff;padding:2px 6px;border-radius:6px}
+    .row{display:flex;gap:12px;flex-wrap:wrap}
+    button{background:#7aa2ff;color:#0b1220;border:0;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer}
+    button:active{transform:translateY(1px)}
+    .ok{color:#7dfca5}.warn{color:#ffd479}.err{color:#ff7a7a}
+    ul{margin:8px 0 0 18px}
+    .small{opacity:.8;font-size:12px}
+  </style>
+</head>
+<body>
+<header>
+  <h1>Teste PWA / “Adicionar à Tela” — Get Power Research</h1>
+  <div class="small">Verifica SW, manifest, beforeinstallprompt e estado standalone.</div>
+</header>
+<main>
+  <div class="card">
+    <h2>Status</h2>
+    <ul id="status">
+      <li>HTTPS: <span id="https">...</span></li>
+      <li>Service Worker suportado: <span id="sw-support">...</span></li>
+      <li>Service Worker registrado: <span id="sw-registered">...</span></li>
+      <li>Manifest carregado: <span id="manifest">...</span></li>
+      <li>Display-mode standalone: <span id="standalone">...</span></li>
+      <li>Evento <code>beforeinstallprompt</code>: <span id="bip">aguardando…</span></li>
+      <li>Plataforma: <span id="platform">...</span></li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>Ações</h2>
+    <div class="row">
+      <button id="reg-sw">Registrar SW</button>
+      <button id="unreg-sw">Desregistrar SW</button>
+      <button id="clear-ls">Limpar localStorage (reset banner)</button>
+      <button id="reload">Recarregar página</button>
+      <button id="ios-hint">Mostrar dica iOS</button>
+    </div>
+    <div class="small" style="margin-top:8px">
+      Dica: após limpar localStorage e desregistrar o SW, navegue pelo site e volte aqui.
+      No Android/Chrome, o <code>beforeinstallprompt</code> costuma disparar após alguma interação.
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Logs</h2>
+    <pre id="log" style="white-space:pre-wrap;max-height:300px;overflow:auto"></pre>
+  </div>
+</main>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const log = (msg, cls='') => {
+    const p = $('log');
+    p.innerHTML += (cls ? `[${cls}] ` : '') + msg + '\n';
+    p.scrollTop = p.scrollHeight;
+  };
+
+  // STATUS BÁSICO
+  $('https').textContent = (location.protocol === 'https:' || location.hostname === 'localhost') ? 'OK' : 'Requer HTTPS';
+  $('https').className = (location.protocol === 'https:' || location.hostname === 'localhost') ? 'ok' : 'warn';
+
+  $('platform').textContent = navigator.userAgent;
+
+  const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  $('standalone').textContent = standalone ? 'Sim' : 'Não';
+  $('standalone').className = standalone ? 'ok' : '';
+
+  // MANIFEST
+  fetch('manifest.webmanifest', {cache:'no-store'})
+    .then(r => {
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      $('manifest').textContent = 'OK';
+      $('manifest').className = 'ok';
+      log('Manifest carregado com sucesso.');
+      return r.json();
+    })
+    .then(man => log('Manifest: '+JSON.stringify({name:man.name, start_url:man.start_url, icons:(man.icons||[]).map(i=>i.sizes)}, null, 2)))
+    .catch(err => { $('manifest').textContent = 'Falha'; $('manifest').className = 'err'; log('Erro manifest: '+err.message,'ERR'); });
+
+  // SERVICE WORKER
+  const hasSW = 'serviceWorker' in navigator;
+  $('sw-support').textContent = hasSW ? 'Sim' : 'Não';
+  $('sw-support').className = hasSW ? 'ok' : 'warn';
+
+  async function isRegistered() {
+    if (!hasSW) return false;
+    const reg = await navigator.serviceWorker.getRegistration();
+    return !!reg;
+  }
+  isRegistered().then(ok => {
+    $('sw-registered').textContent = ok ? 'Sim' : 'Não';
+    $('sw-registered').className = ok ? 'ok' : '';
+  });
+
+  // BOTÕES
+  $('reg-sw').onclick = async () => {
+    if(!hasSW) return alert('Este navegador não suporta Service Worker.');
+    try {
+      const reg = await navigator.serviceWorker.register('sw.js');
+      log('SW registrado: '+(reg && reg.scope));
+      $('sw-registered').textContent = 'Sim';
+      $('sw-registered').className = 'ok';
+    } catch(e){ log('Falha ao registrar SW: '+e.message,'ERR'); }
+  };
+
+  $('unreg-sw').onclick = async () => {
+    if(!hasSW) return;
+    const reg = await navigator.serviceWorker.getRegistration();
+    if(reg){ await reg.unregister(); log('SW desregistrado.'); }
+    $('sw-registered').textContent = 'Não';
+    $('sw-registered').className = '';
+  };
+
+  $('clear-ls').onclick = () => {
+    try {
+      localStorage.removeItem('a2hs_dismissed_at');
+      log('LocalStorage limpo: a2hs_dismissed_at removido.');
+    } catch(e){ log('Erro limpando LS: '+e.message,'ERR'); }
+  };
+
+  $('reload').onclick = () => location.reload();
+
+  // iOS hint manual (útil pra validar seu banner iOS do a2hs.js)
+  $('ios-hint').onclick = () => {
+    alert('No Safari (iOS): toque em Compartilhar → “Adicionar à Tela de Início”.');
+  };
+
+  // beforeinstallprompt
+  let fired = false;
+  window.addEventListener('beforeinstallprompt', (e) => {
+    fired = true;
+    e.preventDefault(); // não mostrar prompt nativo aqui
+    $('bip').textContent = 'Disparado (OK)';
+    $('bip').className = 'ok';
+    log('Evento beforeinstallprompt disparou. Seu a2hs.js deve captar isso na loja.');
+  });
+
+  // fallback se nunca disparar
+  setTimeout(() => {
+    if (!fired) {
+      $('bip').textContent = 'Ainda não disparou';
+      log('beforeinstallprompt ainda não disparou (normal se poucos sinais de uso/engajamento).','WARN');
+    }
+  }, 4000);
+})();
+</script>
+</body>
+</html>

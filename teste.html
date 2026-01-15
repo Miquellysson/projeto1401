@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Fatura</title>
+    <!-- Carrega o Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Estilos de impressão */
+        @media print {
+            body {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            /* Esconde tudo exceto a área de impressão */
+            body > *:not(.print-section) {
+                display: none !important;
+            }
+            .print-section {
+                display: block !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                box-shadow: none !important;
+                border: none !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            /* Esconde botões na impressão */
+            .no-print {
+                display: none !important;
+            }
+            /* Evita quebras de página indesejadas */
+            .print-break-inside-avoid {
+                page-break-inside: avoid;
+            }
+        }
+        
+        /* Oculta a secção de impressão por defeito */
+        .print-section {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans antialiased">
+
+    <!-- FORMULÁRIO (Container Principal) -->
+    <div id="formContainer" class="container max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-xl my-10">
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-8">Gerador de Fatura</h1>
+        
+        <form id="invoiceForm">
+            
+            <!-- Detalhes da Empresa e Cliente em duas colunas -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <!-- Detalhes da Empresa -->
+                <fieldset class="border border-gray-300 p-4 rounded-md">
+                    <legend class="text-lg font-semibold text-gray-700 px-2">Sua Empresa</legend>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="companyName" class="block text-sm font-medium text-gray-600 mb-1">Nome da Empresa:</label>
+                            <input type="text" id="companyName" value="Pros Home Painting" required class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label for="companyAddress" class="block text-sm font-medium text-gray-600 mb-1">Endereço da Empresa:</label>
+                            <textarea id="companyAddress" required rows="3" class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">13735 Interurban Ave S.
+Tukwila, WA, 98168</textarea>
+                        </div>
+                        <div>
+                            <label for="companyContact" class="block text-sm font-medium text-gray-600 mb-1">Contato da Empresa:</label>
+                            <input type="text" id="companyContact" value="Cell: (206)5611946 | Email: proshomepainting@gmail.com" required class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    </div>
+                </fieldset>
+
+                <!-- Informações do Cliente (Cobrar de) -->
+                <fieldset class="border border-gray-300 p-4 rounded-md">
+                    <legend class="text-lg font-semibold text-gray-700 px-2">Cobrar de</legend>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="clientName" class="block text-sm font-medium text-gray-600 mb-1">Nome do Cliente:</label>
+                            <input type="text" id="clientName" placeholder="Marlo Lopez" value="Marlo Lopez" required class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label for="clientAddress" class="block text-sm font-medium text-gray-600 mb-1">Endereço do Cliente:</label>
+                            <textarea id="clientAddress" placeholder="13016 2Nd AVE SW Burien 98146" required rows="3" class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">13016 2Nd AVE SW
+Burien 98146</textarea>
+                        </div>
+                    </div>
+                </fieldset>
+            </div>
+
+            <!-- Detalhes da Fatura -->
+            <fieldset class="border border-gray-300 p-4 rounded-md mb-6">
+                <legend class="text-lg font-semibold text-gray-700 px-2">Detalhes da Fatura</legend>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="invoiceNumber" class="block text-sm font-medium text-gray-600 mb-1">INVOICE Nº:</label>
+                        <input type="text" id="invoiceNumber" value="000134" required class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label for="invoiceDate" class="block text-sm font-medium text-gray-600 mb-1">INVOICE DATE:</label>
+                        <input type="date" id="invoiceDate" required class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                </div>
+            </fieldset>
+
+            <!-- Itens da Fatura -->
+            <fieldset class="border border-gray-300 p-4 rounded-md mb-6">
+                <legend class="text-lg font-semibold text-gray-700 px-2">Descrição & Valor</legend>
+                <div id="invoiceItems" class="space-y-3">
+                    <!-- Cabeçalhos dos itens (visíveis em telas maiores) -->
+                    <div class="hidden md:flex gap-4 mb-2">
+                        <span class="flex-grow font-medium text-gray-600">Descrição</span>
+                        <span class="w-32 font-medium text-gray-600 text-right">Valor</span>
+                        <span class="w-16"></span> <!-- Espaço para o botão remover -->
+                    </div>
+                    
+                    <!-- Itens iniciais (Exemplos do PDF) -->
+                    <div class="item-row flex flex-col md:flex-row gap-2 items-start md:items-center">
+                        <input type="text" class="itemDesc w-full md:flex-grow p-2 border border-gray-300 rounded-md" placeholder="Descrição do item" value="01 ROOM drywall repair, texture and painting." required>
+                        <input type="number" class="itemValue w-full md:w-32 p-2 border border-gray-300 rounded-md text-right" step="0.01" value="1000.00" required>
+                        <button type="button" class="removeItemBtn bg-red-500 text-white px-3 py-2 rounded-md hover:bg-red-600 w-full md:w-auto">Remover</button>
+                    </div>
+                    <div class="item-row flex flex-col md:flex-row gap-2 items-start md:items-center">
+                        <input type="text" class="itemDesc w-full md:flex-grow p-2 border border-gray-300 rounded-md" placeholder="Descrição do item" value="BATHROOM DRYWALL DEMOLITION, DRYWALL REPAIR" required>
+                        <input type="number" class="itemValue w-full md:w-32 p-2 border border-gray-300 rounded-md text-right" step="0.01" value="0.00" required>
+                        <button type="button" class="removeItemBtn bg-red-500 text-white px-3 py-2 rounded-md hover:bg-red-600 w-full md:w-auto">Remover</button>
+                    </div>
+                </div>
+                <button type="button" id="addItemBtn" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">Adicionar Item</button>
+            </fieldset>
+
+            <!-- Total -->
+            <div class="flex justify-end items-center my-6">
+                <span class="text-2xl font-bold text-gray-800">TOTAL:</span>
+                <span id="invoiceTotal" class="text-2xl font-bold text-gray-800 ml-4">$0.00</span>
+            </div>
+
+            <!-- Termos & Condições -->
+            <fieldset class="border border-gray-300 p-4 rounded-md mb-6">
+                <legend class="text-lg font-semibold text-gray-700 px-2">Termos (Não está no PDF, mas mantido)</legend>
+                <textarea id="termsConditions" rows="3" class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"></textarea>
+            </fieldset>
+
+            <button type="submit" id="generateInvoiceBtn" class="w-full bg-green-600 text-white text-lg font-semibold p-3 rounded-md hover:bg-green-700 transition duration-300">
+                Gerar Pré-visualização
+            </button>
+        </form>
+    </div>
+
+    <!-- CONTAINER DA PRÉ-VISUALIZAÇÃO (Inicialmente oculto) -->
+    <!-- Adicionado 'font-serif' para ficar mais parecido com o PDF -->
+    <div id="printPreviewContainer" class="print-section max-w-4xl mx-auto p-8 md:p-12 my-10 bg-white shadow-lg font-serif">
+        <!-- O conteúdo será injetado aqui pelo JavaScript -->
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Elementos do Formulário
+            const formContainer = document.getElementById('formContainer');
+            const invoiceItemsContainer = document.getElementById('invoiceItems');
+            const addItemBtn = document.getElementById('addItemBtn');
+            const invoiceTotalEl = document.getElementById('invoiceTotal');
+            const invoiceForm = document.getElementById('invoiceForm');
+            const invoiceDateEl = document.getElementById('invoiceDate');
+            
+            // Elemento da Pré-visualização
+            const printPreviewContainer = document.getElementById('printPreviewContainer');
+
+            // Define a data da fatura para hoje por padrão
+            // Se o campo já não tiver um valor
+            if (!invoiceDateEl.value) {
+                const today = new Date().toISOString().split('T')[0];
+                invoiceDateEl.value = today;
+            }
+
+            // Função para formatar números como moeda
+            const formatCurrency = (amount) => {
+                return new Intl.NumberFormat('en-US', {
+                    style: 'currency',
+                    currency: 'USD'
+                }).format(amount);
+            };
+
+            // Função para calcular o total
+            const calculateTotal = () => {
+                let total = 0;
+                const itemValues = document.querySelectorAll('.itemValue');
+                itemValues.forEach(input => {
+                    const value = parseFloat(input.value) || 0;
+                    total += value;
+                });
+                invoiceTotalEl.textContent = formatCurrency(total);
+            };
+
+            // Função para adicionar um novo item
+            const addItem = () => {
+                const itemRow = document.createElement('div');
+                itemRow.className = 'item-row flex flex-col md:flex-row gap-2 items-start md:items-center mt-3';
+                itemRow.innerHTML = `
+                    <input type="text" class="itemDesc w-full md:flex-grow p-2 border border-gray-300 rounded-md" placeholder="Descrição do item" required>
+                    <input type="number" class="itemValue w-full md:w-32 p-2 border border-gray-300 rounded-md text-right" step="0.01" value="0.00" required>
+                    <button type="button" class="removeItemBtn bg-red-500 text-white px-3 py-2 rounded-md hover:bg-red-600 w-full md:w-auto">Remover</button>
+                `;
+                invoiceItemsContainer.appendChild(itemRow);
+                // O total é atualizado via delegação de evento 'input'
+            };
+
+            // Função para mostrar o formulário e esconder a pré-visualização
+            const showForm = () => {
+                formContainer.style.display = 'block';
+                printPreviewContainer.style.display = 'none';
+                printPreviewContainer.innerHTML = ''; // Limpa o conteúdo
+            };
+            
+            // Função para gerar a pré-visualização da fatura
+            const generatePreview = (event) => {
+                event.preventDefault();
+
+                // Coleta todos os dados do formulário
+                const companyName = document.getElementById('companyName').value;
+                // Corrigido: PDF usa quebras de linha, então trocamos \n por <br>
+                const companyAddress = document.getElementById('companyAddress').value.replace(/\n/g, '<br>');
+                const companyContact = document.getElementById('companyContact').value;
+                
+                const clientName = document.getElementById('clientName').value;
+                const clientAddress = document.getElementById('clientAddress').value.replace(/\n/g, '<br>');
+                
+                const invoiceNumber = document.getElementById('invoiceNumber').value;
+                const invoiceDate = document.getElementById('invoiceDate').value;
+                
+                const termsConditions = document.getElementById('termsConditions').value.replace(/\n/g, '<br>');
+                const invoiceTotal = invoiceTotalEl.textContent;
+
+                // Coleta os itens
+                let itemsHtml = '';
+                document.querySelectorAll('.item-row').forEach(row => {
+                    const desc = row.querySelector('.itemDesc').value;
+                    const value = parseFloat(row.querySelector('.itemValue').value) || 0;
+                    if(desc) { // Só adiciona se tiver descrição
+                        itemsHtml += `
+                            <!-- Estilo simples de linha do PDF -->
+                            <tr class="border-b border-gray-300">
+                                <td class="py-2 px-1 align-top">${desc}</td>
+                                <td class="py-2 px-1 text-right align-top">${formatCurrency(value)}</td>
+                            </tr>
+                        `;
+                    }
+                });
+
+                // *** INÍCIO DA MUDANÇA: HTML DA PRÉ-VISUALIZAÇÃO MODELADO NO PDF ***
+                const previewHtml = `
+                    <!-- Cabeçalho (Estilo PDF) -->
+                    <header class="flex justify-between items-start mb-10 pb-4 border-b-2 border-black">
+                        <!-- Informações da Empresa (Esquerda) -->
+                        <div class="text-left">
+                            <h2 class="text-3xl font-bold text-black">${companyName}</h2>
+                            <p class="text-gray-700">${companyAddress}</p>
+                            <p class="text-gray-700">${companyContact}</p>
+                        </div>
+                        <!-- Detalhes da Fatura (Direita) -->
+                        <div class="text-right">
+                            <h1 class="text-5xl font-bold text-black mb-4" style="line-height: 1;">INVOICE</h1>
+                            <p class="text-lg">
+                                <span class="font-semibold">INVOICE #:</span>
+                                ${invoiceNumber}
+                            </p>
+                            <p class="text-lg">
+                                <span class="font-semibold">INVOICE DATE:</span>
+                                ${invoiceDate}
+                            </p>
+                        </div>
+                    </header>
+
+                    <!-- BILL TO (Estilo PDF) -->
+                    <section class="mb-10 print-break-inside-avoid">
+                        <h3 class="text-sm font-bold text-black uppercase mb-2">BILL TO</h3>
+                        <p class="text-lg font-semibold text-gray-800">${clientName}</p>
+                        <p class="text-gray-700">${clientAddress}</p>
+                    </section>
+
+                    <!-- Tabela de Itens (Estilo PDF) -->
+                    <section class="mb-10 print-break-inside-avoid">
+                        <table class="w-full table-auto">
+                            <thead>
+                                <tr class="border-b-2 border-black text-left text-black font-semibold uppercase">
+                                    <th class="py-2 px-1">DESCRIPTION</th>
+                                    <th class="py-2 px-1 text-right">AMOUNT</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${itemsHtml}
+                            </tbody>
+                            <tfoot>
+                                <tr class="border-t-2 border-black">
+                                    <td class="py-4 px-1 text-right font-bold text-xl text-black">TOTAL</td>
+                                    <td class="py-4 px-1 text-right font-bold text-xl text-black">${invoiceTotal}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </section>
+
+                    <!-- Termos e Condições (Se houver) -->
+                    ${termsConditions ? `
+                    <section class="mb-10 print-break-inside-avoid">
+                        <h3 class="text-sm font-bold text-black uppercase mb-2">TERMS & CONDITIONS</h3>
+                        <p class="text-gray-700 text-sm">${termsConditions}</p>
+                    </section>
+                    ` : ''}
+
+
+                    <!-- Área de Assinatura (do PDF) -->
+                    <section class="print-break-inside-avoid mt-24">
+                        <div class="w-1/2 border-t-2 border-black pt-2">
+                            <p class="text-gray-700">Signature</p>
+                        </div>
+                    </section>
+                    
+                    <!-- Botões de Ação (Não mudam) -->
+                    <div class="text-center mt-12 no-print space-x-4">
+                        <button id="printBtn" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 font-sans">
+                            Imprimir (ou Salvar como PDF)
+                        </button>
+                        <button id="backBtn" class="bg-gray-500 text-white px-6 py-2 rounded-md hover:bg-gray-600 font-sans">
+                            Voltar ao Editor
+                        </button>
+                    </div>
+                `;
+                // *** FIM DA MUDANÇA ***
+
+                // Injeta o HTML na página
+                printPreviewContainer.innerHTML = previewHtml;
+                
+                // Esconde formulário e mostra pré-visualização
+                formContainer.style.display = 'none';
+                printPreviewContainer.style.display = 'block';
+
+                // Adiciona ouvintes aos novos botões
+                document.getElementById('printBtn').addEventListener('click', () => window.print());
+                document.getElementById('backBtn').addEventListener('click', showForm);
+            };
+            
+            // --- OUVINTES DE EVENTOS (Event Listeners) ---
+
+            // Delegação de evento para cliques (Remover item)
+            invoiceItemsContainer.addEventListener('click', (event) => {
+                const removeBtn = event.target.closest('.removeItemBtn');
+                if (removeBtn) {
+                    const itemRow = removeBtn.closest('.item-row');
+                    itemRow.remove();
+                    calculateTotal(); // Recalcula ao remover
+                }
+            });
+
+            // Delegação de evento para inputs (Calcular total)
+            invoiceItemsContainer.addEventListener('input', (event) => {
+                if (event.target.classList.contains('itemValue')) {
+                    calculateTotal(); // Recalcula ao digitar
+                }
+            });
+
+            // Ouvintes principais
+            addItemBtn.addEventListener('click', addItem);
+            invoiceForm.addEventListener('submit', generatePreview);
+            
+            // --- INICIALIZAÇÃO ---
+            
+            // Calcula o total inicial assim que a página carrega
+            calculateTotal();
+        });
+    </script>
+</body>
+</html>
+

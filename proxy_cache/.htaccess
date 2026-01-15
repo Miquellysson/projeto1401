@@ -1,0 +1,18 @@
+# .htaccess sugerido para a pasta /storage/proxy_cache
+<IfModule mod_autoindex.c>
+  Options -Indexes
+</IfModule>
+
+# Não permitir execução de scripts aqui
+<FilesMatch "\.(php|phtml|phar)$">
+  Require all denied
+</FilesMatch>
+
+# Cache no navegador dos arquivos do proxy
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType image/webp "access plus 7 days"
+  ExpiresByType image/jpeg "access plus 7 days"
+  ExpiresByType image/png  "access plus 7 days"
+  ExpiresByType image/gif  "access plus 7 days"
+</IfModule>

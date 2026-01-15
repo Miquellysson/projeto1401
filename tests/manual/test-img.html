@@ -1,0 +1,32 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>Test IMG Hotlink</title>
+<style>body{font:14px system-ui;margin:20px} .card{border:1px solid #ddd;padding:12px;margin-bottom:16px}</style>
+
+<label>URL da imagem:
+  <input id="u" style="width:100%" value="https://base.rhemacriativa.com/wp-content/uploads/2025/08/AZITROMICINA.png">
+</label>
+<button onclick="go()">Testar</button>
+
+<div id="out"></div>
+
+<script>
+function test(title, attrs) {
+  const card = document.createElement('div'); card.className = 'card';
+  const p = document.createElement('div'); p.textContent = title; card.appendChild(p);
+  const img = document.createElement('img');
+  img.style.maxWidth = '240px'; img.style.display='block';
+  img.onload = ()=> p.textContent += ' — OK';
+  img.onerror = ()=> p.textContent += ' — FALHOU';
+  Object.entries(attrs).forEach(([k,v])=> img.setAttribute(k,v));
+  card.appendChild(img);
+  document.getElementById('out').appendChild(card);
+}
+function go(){
+  document.getElementById('out').innerHTML='';
+  const u = document.getElementById('u').value.trim();
+  test('IMG normal', {src:u});
+  test('IMG referrerpolicy=no-referrer', {src:u, referrerpolicy:'no-referrer'});
+  test('IMG crossorigin=anonymous + no-referrer', {src:u, crossorigin:'anonymous', referrerpolicy:'no-referrer'});
+}
+</script>

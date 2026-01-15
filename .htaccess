@@ -1,0 +1,12 @@
+
+  <IfModule Litespeed>
+  RewriteCond %{REQUEST_URI} ^/financial\.php$ [OR]
+  RewriteCond %{REQUEST_URI} ^/import_wordpress_web\.php$ [OR]
+  RewriteCond %{REQUEST_URI} ^/admin\.php
+  RewriteRule .* - [E=Cache-Control:no-cache]
+  </IfModule>
+  
+  
+  <IfModule Litespeed>
+  RewriteRule .* - [E=Cache-Control:no-cache]
+  </IfModule>

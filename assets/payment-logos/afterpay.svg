@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 54" role="img" aria-label="Afterpay logo badge">
+  <title>Afterpay</title>
+  <rect x="0.5" y="0.5" width="179" height="53" rx="10" fill="#b2fce4" stroke="#0c1d15" stroke-opacity="0.12"/>
+  <g fill="#0c1d15" font-family="Arial, sans-serif" font-size="20" font-weight="700">
+    <text x="20" y="34">afterpay</text>
+  </g>
+  <path fill="#0c1d15" d="M147.6 17.2c-1.4 0-2.5 1.1-2.5 2.4v14.8c0 1.3 1.1 2.4 2.5 2.4h15.1c1.4 0 2.5-1.1 2.5-2.4V19.6c0-1.3-1.1-2.4-2.5-2.4h-15.1zm-6.5 2.4c0-3.3 2.8-6 6.5-6h15.1c3.7 0 6.5 2.7 6.5 6v14.8c0 3.3-2.8 6-6.5 6h-15.1c-3.7 0-6.5-2.7-6.5-6V19.6zm19.5 4.3-6.9 3.9c-.4.2-.4.7 0 .9l6.9 3.9c.4.2.9-.1.9-.5v-7.7c0-.4-.5-.7-.9-.5z"/>
+</svg>

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 54" role="img" aria-label="Klarna logo badge">
+  <title>Klarna</title>
+  <rect x="0.5" y="0.5" width="179" height="53" rx="10" fill="#ffb3c7" stroke="#2a0b16" stroke-opacity="0.18"/>
+  <g fill="#2a0b16" font-family="Arial, sans-serif" font-size="20" font-weight="700">
+    <text x="20" y="34">Klarna</text>
+  </g>
+  <circle cx="150" cy="35" r="4" fill="#2a0b16"/>
+</svg>

@@ -1,0 +1,31 @@
+# Dependências
+node_modules/
+vendor/
+
+# Storage / uploads
+storage/
+uploads/
+public/uploads/
+
+# Cache / temporários
+.cache/
+.tmp/
+
+# Backups e arquivos grandes
+*.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z
+*.sql
+
+# Mídia e design
+*.mp4
+*.mov
+*.psd
+*.ai
+*.pdf
+
+# Logs e ambiente
+*.log
+.env

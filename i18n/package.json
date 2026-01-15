@@ -1,0 +1,19 @@
+{
+  "name": "don",
+  "version": "1.0.0",
+  "description": "**Stack**: Apache + PHP 7.4/8.x + MySQL.   **Features**: multilíngue (PT/EN/ES), catálogo, carrinho, checkout com **Zelle (upload comprovante)**, **Venmo**, **Pix** (payload + QR via serviço público), **PayPal**, painel admin (produtos/clientes/pedidos).",
+  "main": "a2hs.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "playwright": "^1.48.2"
+  }
+}

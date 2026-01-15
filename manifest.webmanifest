@@ -1,0 +1,15 @@
+{
+  "name": "Get Power Research",
+  "short_name": "Get Power Research",
+  "start_url": "./?source=pwa",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0EA5E9",
+  "theme_color": "#0EA5E9",
+  "description": "Catálogo e pedidos da Get Power Research em modo app.",
+  "icons": [
+    { "src": "assets/icons/admin-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "assets/icons/admin-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

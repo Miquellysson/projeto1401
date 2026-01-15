@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>App Get Power Research</title>
+
+  <!-- Manifest + Theme (caminhos absolutos da subpasta) -->
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#0EA5E9">
+
+  <!-- Ícone Apple -->
+  <link rel="apple-touch-icon" href="/assets/pwa/icon-192.png">
+
+  <style>
+    :root{
+      --bg:#0f172a; --card:#111827; --text:#e5e7eb; --muted:#cbd5e1;
+      --brand:#0ea5e9; --brand2:#6366f1; --shadow:0 14px 40px rgba(0,0,0,.35)
+    }
+    *{box-sizing:border-box}
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Helvetica,Arial,sans-serif;
+         margin:0;background:#f6f8fb;color:#0b1320;display:flex;min-height:100vh}
+    .wrap{margin:auto;padding:20px;width:100%;max-width:440px}
+    .card{background:#fff;border-radius:16px;box-shadow:0 10px 28px rgba(2,6,23,.08);padding:22px;text-align:center}
+    .logo{width:76px;height:76px;border-radius:18px;background:#fff;box-shadow:0 6px 18px rgba(0,0,0,.08);object-fit:cover}
+    h1{font-size:22px;margin:12px 0 8px}
+    p.lead{font-size:15px;color:#475569;margin:0 0 16px}
+    button.primary{background:var(--brand);color:#081018;border:0;border-radius:12px;padding:12px 16px;
+                   font-weight:800;cursor:pointer;width:100%}
+    .hint{font-size:13px;color:#64748b;margin-top:10px}
+
+    /* Modal iOS */
+    .overlay{position:fixed;inset:0;background:rgba(2,6,23,.55);backdrop-filter:blur(6px);
+             opacity:0;visibility:hidden;transition:.18s;z-index:50}
+    .overlay.show{opacity:1;visibility:visible}
+    .modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:60;
+           opacity:0;transform:translateY(12px) scale(.98);transition:.18s}
+    .modal.show{opacity:1;transform:none}
+    .sheet{width:min(92vw,460px);background:var(--bg);color:var(--text);border-radius:18px;overflow:hidden;box-shadow:var(--shadow)}
+    .hero{display:flex;align-items:center;gap:12px;padding:16px;background:linear-gradient(135deg,var(--brand) 0%,var(--brand2) 100%)}
+    .hero img{width:48px;height:48px;border-radius:12px;background:#fff}
+    .hero h3{margin:0;color:#0b1320;font-weight:900;font-size:18px}
+    .body{padding:16px}
+    .steps{display:grid;gap:10px}
+    .step{display:flex;gap:10px;align-items:flex-start;background:#0b1220;border:1px solid rgba(148,163,184,.15);
+          padding:12px;border-radius:12px}
+    .badge{background:#111827;border:1px solid rgba(148,163,184,.18);color:var(--muted);
+           border-radius:10px;padding:6px 10px;font-size:12px;white-space:nowrap}
+    .text{font-size:14px;color:#dbe3f3}
+    .row{display:flex;align-items:center;gap:8px}
+    .actions{display:flex;gap:10px;margin-top:14px}
+    .btn{flex:1;border:0;border-radius:12px;padding:10px 12px;font-weight:800;cursor:pointer}
+    .btn.close{background:#0b1220;color:#cbd5e1;border:1px solid rgba(148,163,184,.18)}
+    .legal{opacity:.75;font-size:12px;margin-top:8px;color:#a9b6cf}
+
+    .divider{height:1px;background:rgba(2,6,23,.08);margin:16px 0}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <img class="logo" src="/assets/pwa/icon-192.png" alt="App Get Power Research">
+      <h1>App Get Power Research</h1>
+      <p class="lead">Adicione o App Get Power Research à tela inicial para acesso rápido.</p>
+
+      <!-- Android: botão real -->
+      <button id="installBtn" class="primary" style="display:none">📲 Instalar App</button>
+      <div class="hint" id="androidHint" style="display:none">Se o botão não aparecer, abra o menu ⋮ do Chrome e toque em <b>Instalar app</b>.</div>
+
+      <!-- iOS: link que abre modal -->
+      <button id="iosOpen" class="primary" style="display:none">📱 Como instalar no iPhone</button>
+      <div class="hint" id="iosSmall" style="display:none">Disponível para Safari no iPhone/iPad.</div>
+
+      <div class="divider"></div>
+      <div class="hint">Este atalho funciona no domínio configurado da loja.</div>
+    </div>
+  </div>
+
+  <!-- Modal iOS -->
+  <div class="overlay" id="ovl"></div>
+  <div class="modal" id="mdl" aria-hidden="true">
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="ttl">
+      <div class="hero">
+        <img src="/assets/pwa/icon-192.png" alt="App">
+        <h3 id="ttl">Instalar App Get Power Research (iPhone)</h3>
+      </div>
+      <div class="body">
+        <div class="steps">
+          <div class="step">
+            <span class="badge">1</span>
+            <div class="text">
+              Abra no <b>Safari</b> (este passo só funciona no Safari do iOS).
+            </div>
+          </div>
+          <div class="step">
+            <span class="badge">2</span>
+            <div class="text">
+              Toque em
+              <span class="row" style="display:inline-flex;">
+                <!-- ícone compartilhar -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 16a1 1 0 0 1-1-1V6.414L8.707 8.707a1 1 0 1 1-1.414-1.414l4-4a1 1 0 0 1 1.414 0l4 4A1 1 0 0 1 15.293 8.707L13 6.414V15a1 1 0 0 1-1 1Z"></path><path d="M5 10a1 1 0 0 1 1 1v7h12v-7a1 1 0 1 1 2 0v7a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3v-7a1 1 0 0 1 1-1Z"></path></svg>
+                <b>Compartilhar</b>
+              </span>
+              na barra inferior.
+            </div>
+          </div>
+          <div class="step">
+            <span class="badge">3</span>
+            <div class="text">Role e toque em <b>Adicionar à Tela de Início</b>.</div>
+          </div>
+          <div class="step">
+            <span class="badge">4</span>
+            <div class="text">Confirme o nome <b>App Get Power Research</b> e toque em <b>Adicionar</b>.</div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn close" id="closeIos">Entendi</button>
+        </div>
+        <div class="legal">Dica: se o botão “Compartilhar” não aparecer, toque na barra para mostrá-lo.</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // detecções básicas
+    const ua = navigator.userAgent;
+    const isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+    const isSafari = /^((?!chrome|android).)*safari/i.test(ua); // Safari puro
+    const isAndroid = /Android/i.test(ua);
+
+    // elementos
+    const installBtn = document.getElementById('installBtn');
+    const androidHint = document.getElementById('androidHint');
+    const iosOpen = document.getElementById('iosOpen');
+    const iosSmall = document.getElementById('iosSmall');
+    const ovl = document.getElementById('ovl');
+    const mdl = document.getElementById('mdl');
+    const closeIos = document.getElementById('closeIos');
+
+    // iOS: mostra botão de instruções via modal
+    if (isIOS && isSafari) {
+      iosOpen.style.display = 'inline-block';
+      iosSmall.style.display = 'block';
+      iosOpen.addEventListener('click', () => {
+        ovl.classList.add('show');
+        mdl.classList.add('show');
+        mdl.setAttribute('aria-hidden','false');
+      });
+      closeIos.addEventListener('click', () => {
+        ovl.classList.remove('show');
+        mdl.classList.remove('show');
+        mdl.setAttribute('aria-hidden','true');
+      });
+      ovl.addEventListener('click', () => {
+        closeIos.click();
+      });
+    }
+
+    // Android/Chrome: usa beforeinstallprompt
+    let deferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installBtn.style.display = 'inline-block';
+      androidHint.style.display = 'block';
+    });
+
+    installBtn.addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      installBtn.disabled = true;
+      deferredPrompt.prompt();
+      try {
+        await deferredPrompt.userChoice;
+      } catch (_) {}
+      // não escondemos o botão: usuário pode tentar novamente pelo menu
+    });
+
+    // Garante SW ativo (opcional, ajuda caso o usuário abra este link direto)
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistration().then(r => {
+        if (!r) navigator.serviceWorker.register('/sw.js').catch(()=>{});
+      });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+<!doctype html><meta charset="utf-8">
+<title>Fetch Test &lsaquo; victorfarmafacil.com</title>
+<style>
+body{font-family:system-ui,Segoe UI,Roboto,Arial;padding:20px;max-width:900px;margin:auto}
+pre{background:#0b1020;color:#d1d5db;padding:12px;border-radius:8px;overflow:auto}
+.ok{color:#166534}.fail{color:#b91c1c}
+</style>
+<h1>Teste de Fetch (Navegador)</h1>
+<label>URL: <input id="u" style="width:80%"></label>
+<button onclick="run()">Rodar</button>
+<pre id="log"></pre>
+<script>
+const params=new URL(location).searchParams;
+document.getElementById('u').value=params.get('u')||'';
+async function t(url, ref){
+  const init={method:'GET', mode:'no-cors', cache:'no-store'};
+  if(ref==='no-referrer') init.referrerPolicy='no-referrer';
+  const t0=performance.now();
+  try{
+    const r=await fetch(url, init);
+    const dt=(performance.now()-t0).toFixed(0);
+    return `[${ref||'default'}] ok=${r.ok} type=${r.type} status=${r.status||'n/a'} time=${dt}ms`;
+  }catch(e){ return `[${ref||'default'}] ERRO ${e}`; }
+}
+async function run(){
+  const url=document.getElementById('u').value;
+  const out=[await t(url,'default'), await t(url,'no-referrer')].join('\n');
+  document.getElementById('log').textContent=out;
+}
+</script>
