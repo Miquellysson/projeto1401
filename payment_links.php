@@ -209,7 +209,23 @@ if ($action === 'bulk_save' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!csrf_check($_POST['csrf'] ?? '')) {
         die('CSRF');
     }
+    $singleId = (int)($_POST['save_single_id'] ?? 0);
+    $selectedRaw = $_POST['save_selected_ids'] ?? '';
+    $selectedIds = [];
+    if (is_array($selectedRaw)) {
+        $selectedIds = array_map('intval', $selectedRaw);
+    } elseif ($selectedRaw !== '') {
+        $selectedIds = array_filter(array_map('intval', explode(',', (string)$selectedRaw)));
+    }
     $productIds = array_map('intval', $_POST['product_ids'] ?? []);
+    $saveMode = 'all';
+    if ($singleId > 0) {
+        $productIds = [$singleId];
+        $saveMode = 'single';
+    } elseif ($selectedIds) {
+        $productIds = array_values(array_unique($selectedIds));
+        $saveMode = 'selected';
+    }
     if (!$productIds) {
         pl_flash('warning', 'Nenhum produto enviado para salvar.');
         header('Location: payment_links.php');
@@ -242,7 +258,13 @@ if ($action === 'bulk_save' && $_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     }
-    pl_flash('success', 'Links salvos para '.$saved.' produto(s).');
+    if ($saveMode === 'single') {
+        pl_flash('success', 'Links salvos para o produto #'.$singleId.'.');
+    } elseif ($saveMode === 'selected') {
+        pl_flash('success', 'Links salvos para '.count($productIds).' produto(s) selecionado(s).');
+    } else {
+        pl_flash('success', 'Links salvos para '.$saved.' produto(s).');
+    }
     header('Location: payment_links.php');
     exit;
 }
@@ -384,62 +406,86 @@ admin_header('Links de Pagamento por Produto');
         <input type="hidden" name="action" value="bulk_clear">
         <input type="hidden" name="ids" id="bulk-ids" value="">
       </form>
-      <form method="post" action="payment_links.php">
+      <form method="post" action="payment_links.php" id="bulk-save-form">
         <input type="hidden" name="csrf" value="<?= csrf_token(); ?>">
         <input type="hidden" name="action" value="bulk_save">
-        <div class="overflow-x-auto">
-          <table class="table text-sm">
-            <thead>
-              <tr>
-                <th><input type="checkbox" id="check-all"></th>
-                <th>ID</th>
-                <th>SKU</th>
-                <th>Produto</th>
-                <th>Link Square</th>
-                <th>Link Stripe</th>
-                <th>Link PayPal</th>
-                <?php foreach ($extraGateways as $g): ?>
-                  <th><?= sanitize_html($g['name'] ?? $g['code']); ?></th>
-                <?php endforeach; ?>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-            <?php foreach ($products as $p): $priceDisplay = format_currency((float)($p['price'] ?? 0), strtoupper($p['currency'] ?? (cfg()['store']['currency'] ?? 'USD'))); ?>
-              <tr>
-                <td><input type="checkbox" class="row-check" value="<?= (int)$p['id']; ?>"></td>
-                <td>#<?= (int)$p['id']; ?><input type="hidden" name="product_ids[]" value="<?= (int)$p['id']; ?>"></td>
-                <td><?= sanitize_html($p['sku'] ?? ''); ?></td>
-                <td>
+        <input type="hidden" name="save_single_id" id="save-single-id" value="">
+        <input type="hidden" name="save_selected_ids" id="save-selected-ids" value="">
+        <div class="product-link-toolbar">
+          <label class="flex items-center gap-2 text-sm">
+            <input type="checkbox" id="check-all">
+            Selecionar todos
+          </label>
+          <div class="product-link-filters">
+            <span class="text-xs text-gray-500">Filtros:</span>
+            <label class="filter-chip">
+              <input type="checkbox" class="filter-toggle" data-gateway="square" checked>
+              Square
+            </label>
+            <label class="filter-chip">
+              <input type="checkbox" class="filter-toggle" data-gateway="stripe" checked>
+              Stripe
+            </label>
+            <label class="filter-chip">
+              <input type="checkbox" class="filter-toggle" data-gateway="paypal" checked>
+              PayPal
+            </label>
+            <?php foreach ($extraGateways as $g): ?>
+              <label class="filter-chip">
+                <input type="checkbox" class="filter-toggle" data-gateway="<?= sanitize_html($g['code']); ?>" checked>
+                <?= sanitize_html($g['name'] ?? $g['code']); ?>
+              </label>
+            <?php endforeach; ?>
+          </div>
+          <label class="flex items-center gap-2 text-sm">
+            <input type="checkbox" id="compact-toggle">
+            Modo compacto
+          </label>
+        </div>
+        <div class="product-link-cards">
+          <?php foreach ($products as $p): $priceDisplay = format_currency((float)($p['price'] ?? 0), strtoupper($p['currency'] ?? (cfg()['store']['currency'] ?? 'USD'))); ?>
+            <div class="card product-link-card">
+              <div class="product-link-header">
+                <label class="flex items-center gap-2">
+                  <input type="checkbox" class="row-check" value="<?= (int)$p['id']; ?>">
+                  <span class="text-xs text-gray-500">#<?= (int)$p['id']; ?></span>
+                </label>
+                <input type="hidden" name="product_ids[]" value="<?= (int)$p['id']; ?>">
+                <div class="product-link-title">
                   <div class="font-semibold"><?= sanitize_html($p['name'] ?? ''); ?></div>
-                  <div class="text-xs text-gray-500">Preço: <?= $priceDisplay; ?></div>
-                </td>
-                  <td>
-                    <input class="input w-72" type="url" name="square[<?= (int)$p['id']; ?>]" placeholder="https://square.link/..." value="<?= sanitize_html($p['square_payment_link'] ?? ''); ?>">
-                  </td>
-                  <td>
-                    <input class="input w-64" type="url" name="stripe[<?= (int)$p['id']; ?>]" placeholder="https://..." value="<?= sanitize_html($p['stripe_payment_link'] ?? ''); ?>">
-                  </td>
-                  <td>
-                    <input class="input w-64" type="url" name="paypal[<?= (int)$p['id']; ?>]" placeholder="https://..." value="<?= sanitize_html($p['paypal_payment_link'] ?? ''); ?>">
-                  </td>
-                  <?php foreach ($extraGateways as $g): $code = $g['code']; $val = $extraLinkMap[(int)$p['id']][$code] ?? ''; ?>
-                    <td>
-                      <input class="input w-64" type="url" name="extra[<?= (int)$p['id']; ?>][<?= sanitize_html($code); ?>]" placeholder="https://..." value="<?= sanitize_html($val); ?>">
-                    </td>
-                  <?php endforeach; ?>
-                  <td class="text-right whitespace-nowrap">
-                    <div class="flex items-center gap-2">
-                      <a class="btn btn-ghost btn-sm text-red-600" href="payment_links.php?action=clear_link&id=<?= (int)$p['id']; ?>&csrf=<?= csrf_token(); ?>" onclick="return confirm('Limpar links deste produto?');"><i class="fa-solid fa-eraser mr-1"></i>Limpar</a>
-                    </div>
-                  </td>
-                </tr>
-              <?php endforeach; ?>
-            </tbody>
-          </table>
+                  <div class="text-xs text-gray-500">Preço: <?= $priceDisplay; ?> • SKU: <?= sanitize_html($p['sku'] ?? ''); ?></div>
+                </div>
+                <div class="flex items-center gap-2 flex-wrap">
+                  <button class="btn btn-primary btn-sm save-card-btn" type="submit" data-save-id="<?= (int)$p['id']; ?>"><i class="fa-solid fa-floppy-disk mr-1"></i>Salvar</button>
+                  <a class="btn btn-ghost btn-sm text-red-600" href="payment_links.php?action=clear_link&id=<?= (int)$p['id']; ?>&csrf=<?= csrf_token(); ?>" onclick="return confirm('Limpar links deste produto?');"><i class="fa-solid fa-eraser mr-1"></i>Limpar</a>
+                </div>
+              </div>
+              <div class="product-link-grid">
+                <label class="field gateway-field" data-gateway="square">
+                  <span>Link Square</span>
+                  <input class="input" type="url" name="square[<?= (int)$p['id']; ?>]" placeholder="https://square.link/..." value="<?= sanitize_html($p['square_payment_link'] ?? ''); ?>">
+                </label>
+                <label class="field gateway-field" data-gateway="stripe">
+                  <span>Link Stripe</span>
+                  <input class="input" type="url" name="stripe[<?= (int)$p['id']; ?>]" placeholder="https://..." value="<?= sanitize_html($p['stripe_payment_link'] ?? ''); ?>">
+                </label>
+                <label class="field gateway-field" data-gateway="paypal">
+                  <span>Link PayPal</span>
+                  <input class="input" type="url" name="paypal[<?= (int)$p['id']; ?>]" placeholder="https://..." value="<?= sanitize_html($p['paypal_payment_link'] ?? ''); ?>">
+                </label>
+                <?php foreach ($extraGateways as $g): $code = $g['code']; $val = $extraLinkMap[(int)$p['id']][$code] ?? ''; ?>
+                  <label class="field gateway-field" data-gateway="<?= sanitize_html($code); ?>">
+                    <span><?= sanitize_html($g['name'] ?? $g['code']); ?></span>
+                    <input class="input" type="url" name="extra[<?= (int)$p['id']; ?>][<?= sanitize_html($code); ?>]" placeholder="https://..." value="<?= sanitize_html($val); ?>">
+                  </label>
+                <?php endforeach; ?>
+              </div>
+            </div>
+          <?php endforeach; ?>
         </div>
         <div class="mt-3 flex items-center gap-2 flex-wrap">
           <button class="btn btn-primary" type="submit"><i class="fa-solid fa-floppy-disk mr-2"></i>Salvar todos</button>
+          <button class="btn btn-secondary" type="button" id="save-selected-btn"><i class="fa-solid fa-floppy-disk mr-2"></i>Salvar selecionados</button>
           <button class="btn btn-secondary" type="button" id="bulk-clear-btn"><i class="fa-solid fa-eraser mr-2"></i>Limpar selecionados</button>
           <span class="text-xs text-gray-500">Edite vários links e salve de uma vez; selecione e clique em limpar para remover links apenas dos produtos marcados.</span>
         </div>
@@ -451,6 +497,10 @@ admin_header('Links de Pagamento por Produto');
   (function(){
     const checkAll = document.getElementById('check-all');
     const bulkBtn = document.getElementById('bulk-clear-btn');
+    const saveSelectedBtn = document.getElementById('save-selected-btn');
+    const saveSingleInput = document.getElementById('save-single-id');
+    const saveSelectedInput = document.getElementById('save-selected-ids');
+    const bulkSaveForm = document.getElementById('bulk-save-form');
     if (checkAll) {
       checkAll.addEventListener('change', function(){
         document.querySelectorAll('.row-check').forEach(cb => { cb.checked = checkAll.checked; });
@@ -469,6 +519,56 @@ admin_header('Links de Pagamento por Produto');
         document.getElementById('bulk-form').submit();
       });
     }
+    if (saveSelectedBtn && saveSelectedInput && bulkSaveForm) {
+      saveSelectedBtn.addEventListener('click', () => {
+        const ids = [];
+        document.querySelectorAll('.row-check:checked').forEach(cb => ids.push(cb.value));
+        if (!ids.length) {
+          alert('Selecione ao menos um produto.');
+          return;
+        }
+        saveSelectedInput.value = ids.join(',');
+        bulkSaveForm.submit();
+      });
+    }
+    if (bulkSaveForm && saveSingleInput) {
+      document.querySelectorAll('.save-card-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          saveSingleInput.value = btn.dataset.saveId || '';
+        });
+      });
+      bulkSaveForm.addEventListener('submit', () => {
+        const active = document.activeElement;
+        if (!active || !active.classList.contains('save-card-btn')) {
+          saveSingleInput.value = '';
+        }
+        if (saveSelectedInput) {
+          if (!active || active.id !== 'save-selected-btn') {
+            saveSelectedInput.value = '';
+          }
+        }
+      });
+    }
+    const compactToggle = document.getElementById('compact-toggle');
+    if (compactToggle) {
+      const saved = localStorage.getItem('pl_compact') === '1';
+      if (saved) {
+        compactToggle.checked = true;
+        document.body.classList.add('is-compact');
+      }
+      compactToggle.addEventListener('change', () => {
+        document.body.classList.toggle('is-compact', compactToggle.checked);
+        localStorage.setItem('pl_compact', compactToggle.checked ? '1' : '0');
+      });
+    }
+    document.querySelectorAll('.filter-toggle').forEach(toggle => {
+      toggle.addEventListener('change', () => {
+        const code = toggle.dataset.gateway;
+        document.querySelectorAll(`.gateway-field[data-gateway="${code}"]`).forEach(field => {
+          field.classList.toggle('is-hidden', !toggle.checked);
+        });
+      });
+    });
   })();
 </script>
 <?php admin_footer();
