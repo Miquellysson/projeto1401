@@ -205,18 +205,18 @@ foreach($st as $a){
   $code = (string)($a['code'] ?? '');
   $link = $code !== '' ? affiliate_build_link($baseUrl, $code, (string)($a['landing_url'] ?? '')) : '';
   echo '<tr>';
-  echo '<td>'.(int)$a['id'].'</td>';
-  echo '<td>'.sanitize_html($a['name'] ?? '').'</td>';
-  echo '<td><span class="badge">'.sanitize_html($code).'</span></td>';
-  echo '<td>';
+  echo '<td data-label="#">'.(int)$a['id'].'</td>';
+  echo '<td data-label="Nome">'.sanitize_html($a['name'] ?? '').'</td>';
+  echo '<td data-label="Código"><span class="badge">'.sanitize_html($code).'</span></td>';
+  echo '<td data-label="Link">';
   if ($link !== '') {
     echo '<a class="text-blue-600 underline" href="'.sanitize_html($link).'" target="_blank">'.sanitize_html($link).'</a>';
   } else {
     echo '—';
   }
   echo '</td>';
-  echo '<td>'.((int)($a['is_active'] ?? 1) ? '<span class="badge ok">Ativo</span>' : '<span class="badge danger">Inativo</span>').'</td>';
-  echo '<td><div class="action-buttons">';
+  echo '<td data-label="Status">'.((int)($a['is_active'] ?? 1) ? '<span class="badge ok">Ativo</span>' : '<span class="badge danger">Inativo</span>').'</td>';
+  echo '<td data-label="Ações"><div class="action-buttons">';
   if ($canManageAffiliates) {
     echo '<a class="btn btn-alt btn-sm" href="affiliates.php?action=edit&id='.(int)$a['id'].'"><i class="fa-solid fa-pen"></i> Editar</a>';
     $deleteUrl = 'affiliates.php?action=delete&id='.(int)$a['id'].'&csrf='.csrf_token();

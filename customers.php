@@ -52,12 +52,12 @@ if ($action==='view') {
   echo '<table class="table"><thead><tr><th>#</th><th>Total</th><th>Status</th><th>Quando</th><th></th></tr></thead><tbody>';
   foreach($st as $o){
     echo '<tr>';
-    echo '<td>#'.(int)$o['id'].'</td>';
+    echo '<td data-label="#">#'.(int)$o['id'].'</td>';
     $orderCurrency = strtoupper($o['currency'] ?? (cfg()['store']['currency'] ?? 'USD'));
-    echo '<td>'.format_currency((float)$o['total'], $orderCurrency).'</td>';
-    echo '<td>'.sanitize_html($o['status']).'</td>';
-    echo '<td>'.sanitize_html($o['created_at']).'</td>';
-    echo '<td><a class="btn" href="orders.php?action=view&id='.(int)$o['id'].'">Abrir</a></td>';
+    echo '<td data-label="Total">'.format_currency((float)$o['total'], $orderCurrency).'</td>';
+    echo '<td data-label="Status">'.sanitize_html($o['status']).'</td>';
+    echo '<td data-label="Quando">'.sanitize_html($o['created_at']).'</td>';
+    echo '<td data-label="Ações"><a class="btn" href="orders.php?action=view&id='.(int)$o['id'].'">Abrir</a></td>';
     echo '</tr>';
   }
   echo '</tbody></table></div></div>';
@@ -82,12 +82,12 @@ echo '</div>';
 echo '<div class="p-3 overflow-x-auto"><table class="table"><thead><tr><th>#</th><th>Nome</th><th>E-mail</th><th>Telefone</th><th>Cadastro</th><th></th></tr></thead><tbody>';
 foreach($st as $c){
   echo '<tr>';
-  echo '<td>'.(int)$c['id'].'</td>';
-  echo '<td>'.sanitize_html($c['name']).'</td>';
-  echo '<td>'.sanitize_html($c['email']).'</td>';
-  echo '<td>'.sanitize_html($c['phone']).'</td>';
-  echo '<td>'.sanitize_html($c['created_at'] ?? '').'</td>';
-  echo '<td><div class="action-buttons"><a class="btn btn-alt btn-sm" href="customers.php?action=view&id='.(int)$c['id'].'"><i class="fa-solid fa-eye"></i> Ver</a></div></td>';
+  echo '<td data-label="#">'.(int)$c['id'].'</td>';
+  echo '<td data-label="Nome">'.sanitize_html($c['name']).'</td>';
+  echo '<td data-label="E-mail">'.sanitize_html($c['email']).'</td>';
+  echo '<td data-label="Telefone">'.sanitize_html($c['phone']).'</td>';
+  echo '<td data-label="Cadastro">'.sanitize_html($c['created_at'] ?? '').'</td>';
+  echo '<td data-label="Ações"><div class="action-buttons"><a class="btn btn-alt btn-sm" href="customers.php?action=view&id='.(int)$c['id'].'"><i class="fa-solid fa-eye"></i> Ver</a></div></td>';
   echo '</tr>';
 }
 echo '</tbody></table></div></div>';

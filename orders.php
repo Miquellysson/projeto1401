@@ -734,92 +734,186 @@ if ($action==='view') {
   } elseif (!empty($o['affiliate_code'])) {
     $affiliateLabel = (string)$o['affiliate_code'];
   }
+  $statusLabels = [
+    'pending' => 'Pendente',
+    'paid' => 'Pago',
+    'shipped' => 'Enviado',
+    'canceled' => 'Cancelado',
+    'failed' => 'Falha'
+  ];
+  $statusKey = preg_replace('/[^a-z0-9_-]/i', '', (string)($o['status'] ?? ''));
+  $statusLabel = $statusLabels[$statusKey] ?? ucfirst((string)($o['status'] ?? ''));
   admin_header('Pedido '.$orderCodeDisplay);
-
-  echo '<div class="grid md:grid-cols-3 gap-3">';
-  echo '<div class="card md:col-span-2"><div class="card-title">Itens do pedido</div><div class="p-3 overflow-x-auto">';
-  echo '<table class="table"><thead><tr><th>SKU</th><th>Produto</th><th>Qtd</th><th>Preço</th><th>Total</th></tr></thead><tbody>';
-  foreach($items as $it){
-    $itemCurrency = $it['currency'] ?? $orderCurrency;
-    $priceValue = (float)($it['price'] ?? 0);
-    $line = $priceValue * (int)$it['qty'];
-    echo '<tr>';
-    echo '<td>'.sanitize_html($it['sku'] ?? '').'</td>';
-    echo '<td>'.sanitize_html($it['name']).'</td>';
-    echo '<td>'.(int)$it['qty'].'</td>';
-    echo '<td>'.format_currency($priceValue, $itemCurrency).'</td>';
-    echo '<td>'.format_currency($line, $itemCurrency).'</td>';
-    echo '</tr>';
-  }
-  echo '</tbody></table></div></div>';
 
   $deliveryLabel = '';
   $deliveryDetailsText = trim((string)($o['delivery_method_details'] ?? ''));
 
-  echo '<div class="card"><div class="card-title flex justify-between items-center"><span>Resumo</span>';
+  echo '<div class="order-page"><div class="order-container">';
+  echo '<div class="order-header">';
+  echo '  <div class="order-header-left">';
+  echo '    <div>';
+  echo '      <div class="order-header-title">Pedido</div>';
+  echo '      <div class="order-header-id">'.sanitize_html($orderCodeDisplay).'</div>';
+  echo '    </div>';
+  echo '    <div class="order-meta">';
+  if (!empty($o['created_at'])) {
+    echo '      <div class="order-meta-item"><i class="fa-solid fa-clock"></i>'.sanitize_html($o['created_at']).'</div>';
+  }
+  if (!empty($o['order_origin'])) {
+    echo '      <div class="order-meta-item"><i class="fa-solid fa-compass"></i>Origem: '.sanitize_html($o['order_origin']).'</div>';
+  }
+  if ($affiliateLabel !== '') {
+    echo '      <div class="order-meta-item"><i class="fa-solid fa-link"></i>Afiliado: '.sanitize_html($affiliateLabel).'</div>';
+  }
+  echo '    </div>';
+  echo '  </div>';
+  echo '  <div class="order-header-right">';
+  echo '    <span class="status-badge status-'.sanitize_html($statusKey).'"><span class="status-badge-dot"></span>'.sanitize_html($statusLabel).'</span>';
+  echo '    <a class="btn btn-ghost btn-sm" href="orders.php"><i class="fa-solid fa-arrow-left"></i> Voltar</a>';
   if ($isSuperAdmin) {
     echo '<a class="btn btn-ghost btn-sm text-red-600" href="orders.php?action=delete&id='.$id.'&csrf='.csrf_token().'" onclick="return confirm(\'Remover pedido #'.$id.'?\')"><i class="fa-solid fa-trash"></i> Excluir</a>';
   }
-  echo '</div><div class="p-3">';
-  echo '<div class="mb-2 text-sm text-gray-500">Código: <strong>'.sanitize_html($orderCodeDisplay).'</strong> · Origem: <span class="px-2 py-0.5 rounded bg-gray-100">'.sanitize_html($o['order_origin'] ?? 'nova').'</span></div>';
-  echo '<div class="mb-2">Afiliado: <strong>'.($affiliateLabel !== '' ? sanitize_html($affiliateLabel) : '—').'</strong></div>';
-  echo '<div class="mb-2">Subtotal: <strong>'.format_currency((float)$o['subtotal'], $orderCurrency).'</strong></div>';
-  echo '<div class="mb-2">Frete: <strong>'.format_currency((float)$o['shipping_cost'], $orderCurrency).'</strong></div>';
+  echo '  </div>';
+  echo '</div>';
+
+  echo '<div class="order-grid order-grid-one">';
+  echo '<div class="order-column-left">';
+  echo '<div class="order-card items-card">';
+  echo '  <div class="order-card-header"><span class="order-card-icon"><i class="fa-solid fa-box-open"></i></span><div class="order-card-title">Itens do pedido</div></div>';
+  echo '  <div class="order-card-body">';
+  echo '    <table class="items-table">';
+  echo '      <thead><tr><th class="col-sku">SKU</th><th>Produto</th><th>Qtd</th><th>Preço</th><th>Total</th></tr></thead><tbody>';
+  foreach ($items as $it) {
+    $itemCurrency = $it['currency'] ?? $orderCurrency;
+    $priceValue = (float)($it['price'] ?? 0);
+    $line = $priceValue * (int)$it['qty'];
+    echo '<tr>';
+    echo '<td class="item-sku col-sku">'.sanitize_html($it['sku'] ?? '').'</td>';
+    echo '<td class="item-name">'.sanitize_html($it['name']).'</td>';
+    echo '<td class="item-qty">'.(int)$it['qty'].'</td>';
+    echo '<td class="item-price">'.format_currency($priceValue, $itemCurrency).'</td>';
+    echo '<td class="item-total">'.format_currency($line, $itemCurrency).'</td>';
+    echo '</tr>';
+  }
+  echo '      </tbody></table>';
+  echo '  </div>';
+  echo '</div>';
+
+  echo '<div class="order-card client-card">';
+  echo '  <div class="order-card-header"><span class="order-card-icon"><i class="fa-solid fa-user"></i></span><div class="order-card-title">Cliente</div></div>';
+  echo '  <div class="order-card-body">';
+  echo '    <div class="client-grid">';
+  echo '      <div class="client-info">';
+  echo '        <div class="client-name">'.sanitize_html($displayName ?: '—').'</div>';
+  if (!empty($o['email'])) {
+    echo '        <div class="client-field"><i class="fa-solid fa-envelope client-field-icon"></i><div class="client-field-content"><div class="client-field-label">E-mail</div><a class="client-field-value email" href="mailto:'.sanitize_html($o['email']).'">'.sanitize_html($o['email']).'</a></div></div>';
+  }
+  if (!empty($o['phone'])) {
+    echo '        <div class="client-field"><i class="fa-solid fa-phone client-field-icon"></i><div class="client-field-content"><div class="client-field-label">Telefone</div><div class="client-field-value phone">'.sanitize_html($o['phone']).'</div></div></div>';
+  }
+  if ($deliveryLabel !== '') {
+    echo '        <div class="client-delivery">';
+    echo '          <span class="client-delivery-label">Método de entrega</span>';
+    echo '          <div class="client-delivery-method">'.sanitize_html($deliveryLabel).'</div>';
+    if ($deliveryDetailsText !== '') {
+      echo '          <div class="client-delivery-details">'.sanitize_html($deliveryDetailsText).'</div>';
+    }
+    echo '        </div>';
+  }
+  echo '      </div>';
+  echo '      <div class="client-address-block">';
+  echo '        <div class="client-field-label">Endereço</div>';
+  echo '        <div class="client-field-value client-address">'.$addressHtml.'</div>';
+  echo '      </div>';
+  echo '    </div>';
+  echo '  </div>';
+  echo '</div>';
+  echo '</div>';
+
+  $shippingCost = (float)($o['shipping_cost'] ?? 0);
+  $paymentStatus = preg_replace('/[^a-z0-9_-]/i', '', (string)($o['payment_status'] ?? 'pending'));
+  $paymentStatusLabels = [
+    'pending' => 'Pendente',
+    'paid' => 'Pago',
+    'failed' => 'Falha',
+    'canceled' => 'Cancelado'
+  ];
+  $paymentStatusLabel = $paymentStatusLabels[$paymentStatus] ?? ucfirst($paymentStatus);
+  $trackingRef = trim((string)($o['track_token'] ?? ''));
+
+  echo '<div class="order-card summary-card">';
+  echo '  <div class="order-card-header"><span class="order-card-icon"><i class="fa-solid fa-receipt"></i></span><div class="order-card-title">Resumo Financeiro</div></div>';
+  echo '  <div class="order-card-body">';
+  echo '    <div class="summary-section">';
+  echo '      <div class="summary-row"><span class="summary-label">Subtotal</span><span class="summary-value">'.format_currency((float)$o['subtotal'], $orderCurrency).'</span></div>';
+  if ($shippingCost <= 0) {
+    echo '      <div class="summary-row"><span class="summary-label">Frete</span><span class="summary-value">Frete Grátis</span></div>';
+  } else {
+    echo '      <div class="summary-row"><span class="summary-label">Frete</span><span class="summary-value">'.format_currency($shippingCost, $orderCurrency).'</span></div>';
+  }
   if (!empty($o['secure_delivery']) || (!empty($o['secure_delivery_fee']) && (float)$o['secure_delivery_fee'] > 0)) {
     $secureFee = (float)($o['secure_delivery_fee'] ?? 0);
-    echo '<div class="mb-2">Entrega segura: <strong>'.($secureFee > 0 ? format_currency($secureFee, $orderCurrency) : 'Sim').'</strong></div>';
+    echo '      <div class="summary-row"><span class="summary-label">Entrega segura</span><span class="summary-value">'.($secureFee > 0 ? format_currency($secureFee, $orderCurrency) : 'Sim').'</span></div>';
   }
-  echo '<div class="mb-2">Total: <strong>'.format_currency((float)$o['total'], $orderCurrency).'</strong></div>';
-  echo '<div class="mb-2">Pagamento: <strong>'.sanitize_html($o['payment_method']).'</strong></div>';
-  if (!empty($o['payment_ref'])) echo '<div class="mb-2">Ref: <a class="text-blue-600 underline" href="'.sanitize_html($o['payment_ref']).'" target="_blank">abrir</a></div>';
-  echo '<div class="mb-2">Status: '.status_badge($o['status']).'</div>';
-  if (!empty($o['delivery_method_label']) || !empty($o['delivery_method_code'])) {
+  echo '      <div class="summary-divider"></div>';
+  echo '      <div class="summary-total">';
+  echo '        <div class="summary-label">Total</div>';
+  echo '        <div class="summary-value">'.format_currency((float)$o['total'], $orderCurrency).'</div>';
+  echo '      </div>';
+  echo '    </div>';
+
+  echo '    <div class="summary-info-block">';
+  echo '      <span class="summary-info-label">Pagamento</span>';
+  echo '      <div class="summary-info-value">'.sanitize_html($o['payment_method']).'</div>';
+  echo '      <span class="summary-info-label">Status do pagamento</span>';
+  echo '      <div class="summary-info-value"><span class="status-badge status-'.sanitize_html($paymentStatus).'"><span class="status-badge-dot"></span>'.sanitize_html($paymentStatusLabel).'</span></div>';
+  if (!empty($o['payment_ref'])) {
+    echo '      <span class="summary-info-label">Referência</span>';
+    echo '      <a class="summary-info-value link" href="'.sanitize_html($o['payment_ref']).'" target="_blank" rel="noopener">Abrir no Stripe <i class="fa-solid fa-arrow-up-right-from-square"></i></a>';
+  }
+  echo '    </div>';
+
+  if (!empty($o['delivery_method_label']) || !empty($o['delivery_method_code']) || $deliveryDetailsText !== '' || $trackingRef !== '') {
     $deliveryLabel = trim((string)($o['delivery_method_label'] ?? '')) ?: trim((string)($o['delivery_method_code'] ?? ''));
-    echo '<div class="mb-2">Método de entrega: <strong>'.sanitize_html($deliveryLabel).'</strong></div>';
+    echo '    <div class="summary-info-block">';
+    echo '      <span class="summary-info-label">Entrega</span>';
+    echo '      <div class="summary-info-grid">';
+    echo '        <div class="summary-info-item"><span class="summary-info-sub">Método</span><span>'.($deliveryLabel !== '' ? sanitize_html($deliveryLabel) : '—').'</span></div>';
+    echo '        <div class="summary-info-item"><span class="summary-info-sub">Prazo</span><span>'.($deliveryDetailsText !== '' ? sanitize_html($deliveryDetailsText) : '—').'</span></div>';
+    echo '        <div class="summary-info-item"><span class="summary-info-sub">Região</span><span>'.sanitize_html($o['country'] ?? '—').'</span></div>';
+    echo '        <div class="summary-info-item"><span class="summary-info-sub">Rastreamento</span><span>'.($trackingRef !== '' ? sanitize_html($trackingRef) : '—').'</span></div>';
+    echo '      </div>';
+    echo '    </div>';
   }
-  if ($deliveryDetailsText !== '') {
-    echo '<div class="mb-2 text-xs text-gray-600">'.sanitize_html($deliveryDetailsText).'</div>';
+
+  echo '    <div class="summary-info-block">';
+  echo '      <span class="summary-info-label">Status do pedido</span>';
+  if ($o['status'] === 'pending') {
+    echo '      <div class="status-context">Pedido pendente. Verifique pagamento ou confirme o envio.</div>';
   }
   if ($canManageOrders) {
-    echo '<form class="mt-3" method="post" action="orders.php?action=update_status&id='.$id.'"><input type="hidden" name="csrf" value="'.csrf_token().'"><select class="select" name="status" required><option value="pending" '.($o['status']==='pending'?'selected':'').'>Pendente</option><option value="paid" '.($o['status']==='paid'?'selected':'').'>Pago</option><option value="shipped" '.($o['status']==='shipped'?'selected':'').'>Enviado</option><option value="canceled" '.($o['status']==='canceled'?'selected':'').'>Cancelado</option></select><button class="btn btn-alt btn-sm ml-2" type="submit"><i class="fa-solid fa-rotate"></i> Atualizar</button></form>';
+    echo '      <form class="order-status-form" method="post" action="orders.php?action=update_status&id='.$id.'" data-current-status="'.sanitize_html($o['status']).'">';
+    echo '        <input type="hidden" name="csrf" value="'.csrf_token().'">';
+    echo '        <select class="status-select" name="status" required>';
+    echo '          <option value="pending" '.($o['status']==='pending'?'selected':'').'>Pendente</option>';
+    echo '          <option value="paid" '.($o['status']==='paid'?'selected':'').'>Pago</option>';
+    echo '          <option value="shipped" '.($o['status']==='shipped'?'selected':'').'>Enviado</option>';
+    echo '          <option value="canceled" '.($o['status']==='canceled'?'selected':'').'>Cancelado</option>';
+    echo '        </select>';
+    echo '        <button class="update-btn" type="submit" disabled><i class="fa-solid fa-rotate"></i> Atualizar status</button>';
+    echo '      </form>';
   } else {
-    echo '<div class="text-xs text-gray-500">Você não tem permissão para alterar o status.</div>';
+    echo '      <div class="text-xs text-gray-500">Você não tem permissão para alterar o status.</div>';
   }
-  if (!empty($o['zelle_receipt'])){
-    echo '<div class="mt-3"><a class="btn btn-alt btn-sm" href="'.sanitize_html($o['zelle_receipt']).'" target="_blank"><i class="fa-solid fa-file"></i> Ver comprovante</a></div>';
-  }
-  echo '</div></div>';
+  echo '    </div>';
 
-  $checkoutFields = [
-    'Nome' => $o['first_name'] ?? '',
-    'Sobrenome' => $o['last_name'] ?? '',
-    'E-mail' => $o['email'] ?? '',
-    'Telefone' => $o['phone'] ?? '',
-    'Rua e número' => $o['address'] ?? '',
-    'Complemento' => $o['address2'] ?? '',
-    'Cidade' => $o['city'] ?? '',
-    'Estado' => $o['state'] ?? '',
-    'CEP' => $o['zipcode'] ?? '',
-    'País' => $o['country'] ?? '',
-    'Método de entrega' => $deliveryLabel,
-    'Detalhes da entrega' => $deliveryDetailsText,
-  ];
-
-  echo '<div class="card md:col-span-3"><div class="card-title">Cliente</div><div class="p-3">';
-  echo '<div class="grid md:grid-cols-2 gap-3 text-sm">';
-  foreach ($checkoutFields as $label => $value) {
-    $valueStr = trim((string)$value);
-    if ($label === 'E-mail' && $valueStr !== '') {
-      $valueHtml = '<a class="text-blue-600 underline" href="mailto:'.sanitize_html($valueStr).'">'.sanitize_html($valueStr).'</a>';
-    } else {
-      $valueHtml = $valueStr !== '' ? sanitize_html($valueStr) : '—';
-    }
-    echo '<div><div class="text-xs uppercase tracking-wide text-gray-500">'.sanitize_html($label).'</div><div class="font-medium text-gray-900">'.$valueHtml.'</div></div>';
+  if (!empty($o['zelle_receipt'])) {
+    echo '    <div class="summary-info-block"><a class="summary-info-value link" href="'.sanitize_html($o['zelle_receipt']).'" target="_blank" rel="noopener"><i class="fa-solid fa-file"></i> Ver comprovante</a></div>';
   }
+  echo '  </div>';
+  echo '</div>';
   echo '</div>';
   echo '</div></div>';
-
-  echo '</div>';
   admin_footer(); exit;
 }
 
@@ -1058,25 +1152,25 @@ foreach($ordersList as $r){
   $rowClasses = trim($statusClass.' '.$originClass);
   echo '<tr class="'.sanitize_html($rowClasses).'">';
   $orderCodeDisplay = !empty($r['order_code']) ? sanitize_html($r['order_code']) : '#'.(int)$r['id'];
-  echo '<td><input type="checkbox" class="order-check" name="ids[]" value="'.(int)$r['id'].'" '.(!$isSuperAdmin ? 'disabled' : '').'></td>';
-  echo '<td>'.$orderCodeDisplay;
+  echo '<td data-label="Selecionar"><input type="checkbox" class="order-check" name="ids[]" value="'.(int)$r['id'].'" '.(!$isSuperAdmin ? 'disabled' : '').'></td>';
+  echo '<td data-label="#">'.$orderCodeDisplay;
   if (($r['order_origin'] ?? '') === 'plataforma_antiga') {
     echo '<br><span class="text-xs px-2 py-0.5 rounded bg-amber-100 text-amber-800">Plataforma antiga</span>';
   }
   echo '</td>';
-  echo '<td>'.sanitize_html($r['customer_name']).'</td>';
+  echo '<td data-label="Cliente">'.sanitize_html($r['customer_name']).'</td>';
   $affiliateLabel = '';
   if (!empty($r['affiliate_name'])) {
     $affiliateLabel = (string)$r['affiliate_name'];
   } elseif (!empty($r['affiliate_code'])) {
     $affiliateLabel = (string)$r['affiliate_code'];
   }
-  echo '<td>'.($affiliateLabel !== '' ? sanitize_html($affiliateLabel) : '—').'</td>';
+  echo '<td data-label="Afiliado">'.($affiliateLabel !== '' ? sanitize_html($affiliateLabel) : '—').'</td>';
   $rowCurrency = strtoupper($r['currency'] ?? (cfg()['store']['currency'] ?? 'USD'));
-  echo '<td>'.format_currency((float)$r['total'], $rowCurrency).'</td>';
-  echo '<td>'.status_badge($r['status']).'</td>';
-  echo '<td>'.sanitize_html($r['created_at'] ?? '').'</td>';
-  echo '<td><div class="action-buttons"><a class="btn btn-alt btn-sm" href="orders.php?action=view&id='.(int)$r['id'].'"><i class="fa-solid fa-eye"></i> Ver</a></div></td>';
+  echo '<td data-label="Total">'.format_currency((float)$r['total'], $rowCurrency).'</td>';
+  echo '<td data-label="Status">'.status_badge($r['status']).'</td>';
+  echo '<td data-label="Quando">'.sanitize_html($r['created_at'] ?? '').'</td>';
+  echo '<td data-label="Ações"><div class="action-buttons"><a class="btn btn-alt btn-sm" href="orders.php?action=view&id='.(int)$r['id'].'"><i class="fa-solid fa-eye"></i> Ver</a></div></td>';
   echo '</tr>';
 }
 echo '</tbody></table></div>';

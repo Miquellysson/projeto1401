@@ -1553,37 +1553,37 @@ foreach($st as $r){
   }
   $rowClassAttr = $rowClasses ? ' class="'.implode(' ', $rowClasses).'"' : '';
   echo '<tr'.$rowClassAttr.'>';
-  echo '<td>';
+  echo '<td data-label="Selecionar">';
   if ($isSuperAdmin) {
     echo '<input type="checkbox" name="selected[]" value="'.(int)$r['id'].'" class="product-select">';
   }
   echo '</td>';
-  echo '<td>'.(int)$r['id'].'</td>';
-  echo '<td>'.sanitize_html($r['sku']).'</td>';
-  echo '<td>'.sanitize_html($r['name']).'</td>';
-  echo '<td>'.sanitize_html($r['category_name']).'</td>';
+  echo '<td data-label="#">'.(int)$r['id'].'</td>';
+  echo '<td data-label="SKU">'.sanitize_html($r['sku']).'</td>';
+  echo '<td data-label="Produto">'.sanitize_html($r['name']).'</td>';
+  echo '<td data-label="Categoria">'.sanitize_html($r['category_name']).'</td>';
   $priceNow = (float)$r['price'];
   $productCurrency = normalize_product_currency($r['currency'] ?? '', $storeCurrency);
   $priceCompareList = isset($r['price_compare']) ? (float)$r['price_compare'] : null;
   $priceFormatted = format_currency($priceNow, $productCurrency);
   if ($priceCompareList && $priceCompareList > $priceNow) {
     $compareFormatted = format_currency($priceCompareList, $productCurrency);
-    echo '<td><div class="flex flex-col leading-tight"><span class="text-[11px] line-through text-gray-400">'.$compareFormatted.'</span><span class="font-semibold text-brand-700">'.$priceFormatted.'</span></div></td>';
+    echo '<td data-label="Preço"><div class="flex flex-col leading-tight"><span class="text-[11px] line-through text-gray-400">'.$compareFormatted.'</span><span class="font-semibold text-brand-700">'.$priceFormatted.'</span></div></td>';
   } else {
-    echo '<td>'.$priceFormatted.'</td>';
+    echo '<td data-label="Preço">'.$priceFormatted.'</td>';
   }
-  echo '<td>'.format_currency((float)($r['shipping_cost'] ?? 7), $productCurrency).'</td>';
-  echo '<td>'.$productCurrency.'</td>';
-  echo '<td>'.(int)$r['stock'].'</td>';
+  echo '<td data-label="Frete">'.format_currency((float)($r['shipping_cost'] ?? 7), $productCurrency).'</td>';
+  echo '<td data-label="Moeda">'.$productCurrency.'</td>';
+  echo '<td data-label="Estoque">'.(int)$r['stock'].'</td>';
   $squareCol = trim((string)($r['square_payment_link'] ?? ''));
   if ($squareCol !== '') {
     $safeLink = sanitize_html($squareCol);
-    echo '<td><span class="badge ok">Config.</span> <a class="text-sm text-brand-600 underline ml-1" href="'.$safeLink.'" target="_blank" rel="noopener">Testar</a></td>';
+    echo '<td data-label="Cartão (Square)"><span class="badge ok">Config.</span> <a class="text-sm text-brand-600 underline ml-1" href="'.$safeLink.'" target="_blank" rel="noopener">Testar</a></td>';
   } else {
-    echo '<td><span class="badge danger">Pendente</span></td>';
+    echo '<td data-label="Cartão (Square)"><span class="badge danger">Pendente</span></td>';
   }
-  echo '<td>'.((int)$r['active']?'<span class="badge ok">Sim</span>':'<span class="badge danger">Não</span>').'</td>';
-  echo '<td><div class="action-buttons">';
+  echo '<td data-label="Ativo">'.((int)$r['active']?'<span class="badge ok">Sim</span>':'<span class="badge danger">Não</span>').'</td>';
+  echo '<td data-label="Ações"><div class="action-buttons">';
   if ($canManageProducts) {
     echo '<a class="btn btn-alt btn-sm" href="products.php?action=edit&id='.(int)$r['id'].'"><i class="fa-solid fa-pen"></i> Editar</a>';
   }

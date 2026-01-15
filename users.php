@@ -166,14 +166,14 @@ echo '</div>';
 echo '<div class="p-3 overflow-x-auto"><table class="table"><thead><tr><th>#</th><th>Nome</th><th>E-mail</th><th>Perfil</th><th>Ativo</th><th>Criado</th><th></th></tr></thead><tbody>';
 foreach($st as $u){
   echo '<tr>';
-  echo '<td>'.(int)$u['id'].'</td>';
-  echo '<td>'.sanitize_html($u['name']).'</td>';
-  echo '<td>'.sanitize_html($u['email']).'</td>';
+  echo '<td data-label="#">'.(int)$u['id'].'</td>';
+  echo '<td data-label="Nome">'.sanitize_html($u['name']).'</td>';
+  echo '<td data-label="E-mail">'.sanitize_html($u['email']).'</td>';
   $roleLabel = $rolesMap[$u['role']] ?? ucfirst($u['role']);
-  echo '<td>'.sanitize_html($roleLabel).'</td>';
-  echo '<td>'.((int)$u['active']?'<span class="badge ok">Sim</span>':'<span class="badge danger">Não</span>').'</td>';
-  echo '<td>'.sanitize_html($u['created_at'] ?? '').'</td>';
-  echo '<td><div class="action-buttons">';
+  echo '<td data-label="Perfil">'.sanitize_html($roleLabel).'</td>';
+  echo '<td data-label="Ativo">'.((int)$u['active']?'<span class="badge ok">Sim</span>':'<span class="badge danger">Não</span>').'</td>';
+  echo '<td data-label="Criado">'.sanitize_html($u['created_at'] ?? '').'</td>';
+  echo '<td data-label="Ações"><div class="action-buttons">';
   echo '<a class="btn btn-alt btn-sm" href="users.php?action=edit&id='.(int)$u['id'].'"><i class="fa-solid fa-pen"></i> Editar</a>';
   if ($isSuperAdmin) {
     $deleteUrl = 'users.php?action=delete&id='.(int)$u['id'].'&csrf='.csrf_token();

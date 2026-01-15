@@ -178,16 +178,16 @@ if ($currentAdminIsSuper) {
 echo '<th>#</th><th>Nome</th><th>Ordem</th><th>Ativa</th><th></th></tr></thead><tbody>';
 foreach($st as $c){
   echo '<tr>';
-  echo '<td>';
+  echo '<td data-label="Selecionar">';
   if ($currentAdminIsSuper) {
     echo '<input type="checkbox" name="selected[]" value="'.(int)$c['id'].'">';
   }
   echo '</td>';
-  echo '<td>'.(int)$c['id'].'</td>';
-  echo '<td>'.sanitize_html($c['name']).'</td>';
-  echo '<td>'.(int)$c['sort_order'].'</td>';
-  echo '<td>'.((int)$c['active']?'<span class="badge ok">Sim</span>':'<span class="badge danger">Não</span>').'</td>';
-  echo '<td><div class="action-buttons">';
+  echo '<td data-label="#">'.(int)$c['id'].'</td>';
+  echo '<td data-label="Nome">'.sanitize_html($c['name']).'</td>';
+  echo '<td data-label="Ordem">'.(int)$c['sort_order'].'</td>';
+  echo '<td data-label="Ativa">'.((int)$c['active']?'<span class="badge ok">Sim</span>':'<span class="badge danger">Não</span>').'</td>';
+  echo '<td data-label="Ações"><div class="action-buttons">';
   if ($canManageCategories) {
     echo '<a class="btn btn-alt btn-sm" href="categories.php?action=edit&id='.(int)$c['id'].'"><i class="fa-solid fa-pen"></i> Editar</a>';
   }
